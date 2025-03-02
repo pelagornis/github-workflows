@@ -1,0 +1,38 @@
+name: Changelog Updater
+
+description: Generates and updates CHANGELOG.md automatically from Git history and PRs.
+
+on:
+  workflow_call:
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  update_changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        run: sudo apt update && sudo apt install gh -y
+
+      - name: Authenticate GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh auth login --with-token <<< "$GH_TOKEN"
+
+      - name: Generate Changelog
+        run: |
+          echo "## Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          gh pr list --state merged --limit 10 --json title,number --jq '.[] | "- PR #\(.number): \(.title)"' >> CHANGELOG.md
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions@github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog [skip ci]" || exit 0
+          git push

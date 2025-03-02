@@ -1,0 +1,27 @@
+name: Contributing
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  check-contributing-guide:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Ensure Contributing Guidelines exist
+        id: check_contributing
+        run: |
+          if [ ! -f "CONTRIBUTI iNG.md" ]; then
+            echo "CONTRIBUTING.md file is missing."
+            exit 1
+          else
+            echo "CONTRIBUTING.md found."
+          fi
+
+      - name: Send thank you message
+        if: success()
+        run: |
+          echo "Thanks @${{ github.actor }} for your contribution!"
